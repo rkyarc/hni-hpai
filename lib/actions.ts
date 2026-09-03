@@ -2,7 +2,7 @@
 
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
-import { signIn } from "../auth"
+import { signIn, signOut } from "../auth"
 import { AuthError } from "next-auth"
 
 const prisma = new PrismaClient()
@@ -68,4 +68,8 @@ export async function login(formData: FormData) {
     
     throw error 
   }
+}
+
+export async function logout() {
+  await signOut({ redirectTo: "/login" })
 }
