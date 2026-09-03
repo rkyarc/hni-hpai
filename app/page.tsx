@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import AddToCartButton from "@/components/add-to-cart-button";
+import { addToCart } from "@/lib/actions";
 
 const prisma = new PrismaClient();
 
@@ -40,7 +42,11 @@ export default async function HomePage() {
               )}
             </CardContent>
             <CardFooter>
-              <Button className="w-full">Tambahkan ke Keranjang</Button>
+              {product.variants.length > 0 ? (
+                <AddToCartButton variantId={product.variants[0].id} />
+              ) : (
+                <Button disabled className="w-full">Stok Kosong</Button>
+              )}
             </CardFooter>
           </Card>
         ))}

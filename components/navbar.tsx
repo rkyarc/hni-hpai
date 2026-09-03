@@ -19,6 +19,11 @@ export default async function Navbar() {
               <span className="text-sm font-medium text-gray-700 hidden md:inline-block">
                 Halo, {session.user.name}
               </span>
+
+              <Link href="/cart">
+                <Button variant="ghost" size="sm">🛒 Keranjang</Button>
+              </Link>
+
               <form action={logout}>
                 <Button variant="outline" size="sm" type="submit">
                   Logout
