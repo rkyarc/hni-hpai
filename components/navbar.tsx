@@ -20,6 +20,10 @@ export default async function Navbar() {
                 Halo, {session.user.name}
               </span>
 
+              <Link href="/orders">
+                <Button variant="ghost" size="sm">📦 Pesanan</Button>
+              </Link>
+              
               <Link href="/cart">
                 <Button variant="ghost" size="sm">🛒 Keranjang</Button>
               </Link>

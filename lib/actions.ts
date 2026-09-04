@@ -124,3 +124,86 @@ export async function addToCart(variantId: string) {
     return { error: "Gagal menambahkan produk ke keranjang." }
   }
 }
+
+export async function checkout() {
+  const session = await auth()
+  if (!session?.user) {
+    return { error: "Silakan login terlebih dahulu." }
+  }
+
+  const userId = session.user.id
+
+  try {
+    const cart = await prisma.cart.findUnique({
+      where: { userId },
+      include: { 
+        items: { 
+          include: { 
+            variant: {
+              include: { product: true } 
+            } 
+          } 
+        } 
+      }
+    })
+
+    if (!cart || cart.items.length === 0) {
+      return { error: "Keranjang Anda masih kosong!" }
+    }
+
+    const totalAmount = cart.items.reduce((total, item) => {
+      return total + (item.quantity * (item.variant.price || 0))
+    }, 0)
+
+    let address = await prisma.address.findFirst({ where: { userId } })
+    if (!address) {
+      address = await prisma.address.create({
+        data: {
+          userId: userId,
+          title: "Rumah",
+          recipient: session.user.name || "Customer",
+          phone: "-",
+          street: "Alamat belum diatur",
+          city: "-",
+          province: "-",
+          postalCode: "-"
+        }
+      })
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
+        data: {
+          userId: userId,
+          addressId: address.id, 
+          totalAmount: totalAmount,
+        }
+      })
+
+      const orderItems = cart.items.map((item) => ({
+        orderId: order.id,
+        variantId: item.variantId,
+        snapshotName: item.variant.product.name,
+        snapshotVariant: item.variant.name,
+        snapshotPrice: item.variant.price,
+        quantity: item.quantity,
+        subtotal: item.quantity * item.variant.price
+      }))
+      
+      await tx.orderItem.createMany({
+        data: orderItems
+      })
+
+      await tx.cartItem.deleteMany({
+        where: { cartId: cart.id }
+      })
+    })
+
+    revalidatePath("/cart")
+    return { success: "Pesanan berhasil dibuat! Terima kasih telah berbelanja." }
+    
+  } catch (error) {
+    console.error("Checkout error:", error)
+    return { error: "Terjadi kesalahan saat memproses pesanan." }
+  }
+}

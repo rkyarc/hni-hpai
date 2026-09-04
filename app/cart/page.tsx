@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import CheckoutButton from "@/components/checkout-button";
 
 const prisma = new PrismaClient();
 
@@ -82,9 +83,7 @@ export default async function CartPage() {
                   <span>Total</span>
                   <span>Rp {totalAmount.toLocaleString('id-ID')}</span>
                 </div>
-                <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-md h-12">
-                  Checkout Sekarang
-                </Button>
+                <CheckoutButton />
               </CardContent>
             </Card>
           </div>
