@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import PayButton from "@/components/pay-button";
 
 const prisma = new PrismaClient();
 
@@ -20,6 +21,7 @@ export default async function OrdersPage() {
     include: {
       items: true, // Ambil daftar barang di dalam pesanan
       address: true, // Ambil alamat pengiriman
+      payment: true,
     },
     orderBy: { createdAt: "desc" }, // Urutkan dari yang paling baru
   });
@@ -84,6 +86,9 @@ export default async function OrdersPage() {
                       <p className="text-lg font-bold text-blue-600">
                         Rp {order.totalAmount.toLocaleString("id-ID")}
                       </p>
+                      {order.status === "PENDING_PAYMENT" && order.payment?.snapToken && (
+                        <PayButton snapToken={order.payment.snapToken} />
+                      )}
                     </div>
                   </div>
 
