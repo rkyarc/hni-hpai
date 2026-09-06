@@ -19,6 +19,13 @@ export default async function Navbar() {
               <span className="text-sm font-medium text-gray-700 hidden md:inline-block">
                 Halo, {session.user.name}
               </span>
+              {(session.user as any).role === "ADMIN" || (session.user as any).role === "OWNER" ? (
+                <Link href="/admin">
+                  <Button variant="outline" size="sm" className="border-yellow-500 text-yellow-600">
+                    🛡️ Admin
+                  </Button>
+                </Link>
+              ) : null}
 
               <Link href="/orders">
                 <Button variant="ghost" size="sm">📦 Pesanan</Button>
