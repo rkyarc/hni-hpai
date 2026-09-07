@@ -304,3 +304,26 @@ export async function createProduct(formData: FormData) {
   revalidatePath("/"); 
   redirect("/admin/products");
 }
+
+export async function deleteProduct(formData: FormData) {
+  const id = formData.get("id") as string;
+  
+  if (!id) return;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.productVariant.deleteMany({
+        where: { productId: id },
+      });
+      
+      await tx.product.delete({
+        where: { id: id },
+      });
+    });
+
+    revalidatePath("/admin/products");
+    revalidatePath("/");
+  } catch (error) {
+    console.error("Error deleting product:", error);
+  }
+}

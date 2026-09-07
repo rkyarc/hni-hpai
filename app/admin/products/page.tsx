@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { deleteProduct } from "@/lib/actions";
+import DeleteProductButton from "@/components/delete-product-button";
 
 const prisma = new PrismaClient();
 
@@ -68,7 +70,14 @@ export default async function AdminProductsPage() {
                     </span>
                   </td>
                   <td className="p-4 flex gap-2">
-                    <Button variant="outline" size="sm">Edit</Button>
+                    <Link href={`/admin/products/${product.id}/edit`}>
+                      <Button variant="outline" size="sm">Edit</Button>
+                    </Link>
+
+                    <form action={deleteProduct}>
+                      <input type="hidden" name="id" value={product.id} />
+                      <DeleteProductButton />
+                    </form>
                   </td>
                 </tr>
               ))}
