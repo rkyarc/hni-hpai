@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const prisma = new PrismaClient();
 
@@ -17,9 +18,11 @@ export default async function AdminProductsPage() {
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold">Manajemen Produk 📦</h1>
-        <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
-          + Tambah Produk Baru
-        </Button>
+        <Link href="/admin/products/new">
+          <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
+            + Tambah Produk Baru
+          </Button>
+        </Link>
       </div>
       
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

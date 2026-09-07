@@ -6,6 +6,7 @@ import { signIn, signOut, auth } from "../auth"
 import { AuthError } from "next-auth"
 import { revalidatePath } from "next/cache"
 import { snap } from "./midtrans";
+import { redirect } from "next/navigation";
 
 const prisma = new PrismaClient()
 
@@ -192,10 +193,9 @@ export async function checkout() {
       await tx.orderItem.createMany({ data: orderItems });
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
 
-      return newOrder; // Kembalikan data order agar bisa dipakai Midtrans
+      return newOrder;
     });
 
-    // 2. Minta Snap Token ke Midtrans
     const parameter = {
       transaction_details: {
         order_id: order.id,
@@ -209,7 +209,6 @@ export async function checkout() {
 
     const snapToken = await snap.createTransactionToken(parameter);
 
-    // 3. Simpan Token tersebut ke tabel Payment
     await prisma.payment.create({
       data: {
         orderId: order.id,
@@ -227,32 +226,26 @@ export async function checkout() {
   }
 }
 
-// --- FUNGSI 6: UPDATE STATUS PEMBAYARAN ---
 export async function updatePaymentSuccess(snapToken: string) {
   try {
-    // Cari data pembayaran berdasarkan token yang sedang aktif
     const payment = await prisma.payment.findFirst({
       where: { snapToken: snapToken }
     })
 
     if (!payment) return { error: "Data pembayaran tidak ditemukan." }
 
-    // Gunakan Transaction agar Order dan Payment terupdate bersamaan
     await prisma.$transaction(async (tx) => {
-      // 1. Update status di tabel Payment
       await tx.payment.update({
         where: { id: payment.id },
         data: { status: "PAID" }
       })
 
-      // 2. Update status di tabel Order
       await tx.order.update({
         where: { id: payment.orderId },
         data: { status: "PAID" }
       })
     })
 
-    // Refresh halaman riwayat pesanan
     revalidatePath("/orders")
     return { success: "Status pesanan berhasil diperbarui menjadi LUNAS!" }
     
@@ -260,4 +253,54 @@ export async function updatePaymentSuccess(snapToken: string) {
     console.error("Update payment error:", error)
     return { error: "Gagal memperbarui status pesanan di database." }
   }
+}
+
+export async function createProduct(formData: FormData) {
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const price = parseInt(formData.get("price") as string);
+  const stock = parseInt(formData.get("stock") as string);
+  const weight = parseInt(formData.get("weight") as string);
+
+  if (!name || !price || !stock) {
+    console.error("Data tidak lengkap!");
+    return; 
+  }
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
+
+  try {
+    await prisma.product.create({
+      data: {
+        name: name,
+        slug: slug,
+        description: description,
+        isActive: true,
+        category: {
+          connectOrCreate: {
+            where: { slug: "herba" },
+            create: { name: "Herba", slug: "herba" }
+          }
+        },
+        variants: {
+          create: [
+            {
+              name: "Default",
+              sku: "SKU-" + Date.now(),
+              price: price,
+              stock: stock,
+              weight: weight || 1000,
+            }
+          ],
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return; 
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/"); 
+  redirect("/admin/products");
 }
