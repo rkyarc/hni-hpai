@@ -327,3 +327,39 @@ export async function deleteProduct(formData: FormData) {
     console.error("Error deleting product:", error);
   }
 }
+
+export async function updateProduct(formData: FormData) {
+  const id = formData.get("id") as string;
+  const variantId = formData.get("variantId") as string;
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const price = parseInt(formData.get("price") as string);
+  const stock = parseInt(formData.get("stock") as string);
+  const weight = parseInt(formData.get("weight") as string);
+
+  if (!id || !variantId || !name || !price || !stock) {
+    console.error("Data tidak lengkap untuk update!");
+    return;
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.product.update({
+        where: { id: id },
+        data: { name: name, description: description },
+      });
+      
+      await tx.productVariant.update({
+        where: { id: variantId },
+        data: { price: price, stock: stock, weight: weight || 1000 },
+      });
+    });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return;
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  redirect("/admin/products");
+}
