@@ -74,7 +74,7 @@ export default async function HomePage() {
                 {/* Product Image Area */}
                 <div className="aspect-square bg-gray-50 rounded-xl mb-4 flex items-center justify-center p-2">
                   <img 
-                    src={"https://via.placeholder.com/300x300/f3f4f6/10b981?text=" + encodeURIComponent(product.name)} 
+                    src={`https://placehold.co/300x300/f3f4f6/10b981?text=${product.name.replace(/ /g, '+')}`} 
                     alt={product.name}
                     className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-300 mix-blend-multiply"
                   />
