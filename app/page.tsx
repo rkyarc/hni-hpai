@@ -4,9 +4,19 @@ import AddToCartButton from "@/components/add-to-cart-button";
 
 const prisma = new PrismaClient();
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const searchQuery = q || "";
+
   const products = await prisma.product.findMany({
-    where: { isActive: true },
+    where: { 
+      isActive: true,
+      ...(searchQuery ? { name: { contains: searchQuery } } : {}) 
+    },
     include: {
       category: true,
       variants: true,
@@ -18,39 +28,46 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       
-      {/* 1. HERO BANNER SECTION  */}
-      <section className="bg-emerald-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col md:flex-row items-center justify-between">
-          <div className="md:w-1/2 space-y-6">
-            <p className="text-emerald-200 font-semibold tracking-wider text-sm">HNI HPAI: HALAL & HERBAL SOLUTIONS</p>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Natural Products for <br /> a Healthier Life.
-            </h1>
-            <p className="text-emerald-100 text-lg max-w-md">
-              Produk herbal alami, botani, dan gaya hidup sehat untuk Anda dan keluarga tercinta.
-            </p>
-            <Button className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 rounded-full font-semibold text-lg border-0 shadow-lg mt-4">
-              Shop Now
-            </Button>
-          </div>
-          <div className="md:w-1/2 mt-10 md:mt-0 flex justify-center relative">
-            <div className="w-80 h-80 bg-emerald-600 rounded-full flex items-center justify-center border-4 border-emerald-500/30 relative z-10 shadow-2xl">
-              <span className="text-emerald-200 font-medium px-8 text-center">
-                ✨ Gambar Banner Utama ✨
-              </span>
+      {/* 1. HERO BANNER SECTION */}
+      {!searchQuery && (
+        <section className="bg-emerald-700 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col md:flex-row items-center justify-between">
+            <div className="md:w-1/2 space-y-6">
+              <p className="text-emerald-200 font-semibold tracking-wider text-sm">HNI HPAI: HALAL & HERBAL SOLUTIONS</p>
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                Natural Products for <br /> a Healthier Life.
+              </h1>
+              <p className="text-emerald-100 text-lg max-w-md">
+                Produk herbal alami, botani, dan gaya hidup sehat untuk Anda dan keluarga tercinta.
+              </p>
+              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 rounded-full font-semibold text-lg border-0 shadow-lg mt-4">
+                Shop Now
+              </Button>
+            </div>
+            <div className="md:w-1/2 mt-10 md:mt-0 flex justify-center relative">
+              <div className="w-80 h-80 bg-emerald-600 rounded-full flex items-center justify-center border-4 border-emerald-500/30 relative z-10 shadow-2xl">
+                <span className="text-emerald-200 font-medium px-8 text-center">
+                  ✨ Gambar Banner Utama ✨
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 2. FEATURED PRODUCTS GRID */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${searchQuery ? 'py-8' : 'py-16'}`}>
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Featured</h2>
-          <div className="flex gap-2">
-            <button className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 shadow-sm">{"<"}</button>
-            <button className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 shadow-sm">{">"}</button>
-          </div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {/* ✅ 3. Tampilkan judul dinamis */}
+            {searchQuery ? `Hasil Pencarian: "${searchQuery}"` : "Featured"}
+          </h2>
+          {!searchQuery && (
+            <div className="flex gap-2">
+              <button className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 shadow-sm">{"<"}</button>
+              <button className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 shadow-sm">{">"}</button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -106,7 +123,9 @@ export default async function HomePage() {
 
         {products.length === 0 && (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 mt-6">
-            <p className="text-gray-500">Belum ada produk yang tersedia saat ini.</p>
+            <span className="text-4xl mb-4 block">🔍</span>
+            <p className="text-gray-900 font-bold text-lg">Produk Tidak Ditemukan</p>
+            <p className="text-gray-500">Maaf, kami tidak dapat menemukan produk "{searchQuery}".</p>
           </div>
         )}
       </section>
